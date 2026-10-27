@@ -146,21 +146,6 @@ public class GlobalExceptionHandler {
     }
 
 
-    @ExceptionHandler(NotEnoughPointException.class)
-    @ResponseBody
-    public String exNotEnoughPointException(NotEnoughPointException e, HttpServletRequest request, Model model) {
-        log.warn("==== 포인트 부족 에러 발생 ====");
-        log.warn("요청 URL : {}", request.getRequestURL());
-        String msg = e.getMessage().replace("'", "\\'"); // 따옴표 깨짐 방지
-        return """
-                <script>
-                    alert('%s');
-                    location.href = '/user/detail';
-                </script>    
-                """.formatted(msg);
-    }
-
-
 
     // 오류 화면에서도 헤더의 로그인 메뉴가 보이도록 sessionUserDto를 Model 에 추가
     private void addSessionUserDto(HttpServletRequest request, Model model) {

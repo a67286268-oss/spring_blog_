@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.client.RestTemplate;
@@ -29,20 +30,23 @@ public class PortOneApiClient {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
-    public void getPayment(String paymentId) {
+    public PaymentResponse.PortOnePayment getPayment(String paymentId) {
         HttpHeaders headers = new HttpHeaders();
         headers.set(HttpHeaders.AUTHORIZATION, "PortOne " + apiSecret);
 
         HttpEntity<Void> request = new HttpEntity<>(headers);
 
-        restTemplate.exchange(
+        ResponseEntity<PaymentResponse.PortOnePayment> response = restTemplate.exchange(
                 PAYMENT_URL + "/" + paymentId,
                 HttpMethod.GET,
                 request,
-                String.class
+                PaymentResponse.PortOnePayment.class
         );
+        return response.getBody();
 
     }
+
+
 
 
 }

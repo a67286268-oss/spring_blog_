@@ -1,6 +1,7 @@
 package com.tenco.spring_blog.payment;
 
 import com.tenco.spring_blog._core.error.Exception400;
+import com.tenco.spring_blog._core.error.Exception403;
 import com.tenco.spring_blog._core.error.Exception404;
 import com.tenco.spring_blog.user.User;
 import com.tenco.spring_blog.user.UserJpaRepository;
@@ -48,4 +49,35 @@ public class PaymentService {
         return paymentId;
     }
 
+    @Transactional
+    public PaymentResponse.CompleteDto complete(Long sessionUserId, String paymentId, PaymentResponse.PortOnePayment portOnePayment) {
+
+        Payment payment = paymentJpaRepository.findByPaymentId(paymentId)
+                .orElseThrow(() -> new Exception400("결제 정보를 찾을수 없습니다"));
+
+        if (!payment.isOwner(sessionUserId)) {
+            throw new Exception403("본인의 결제만 처리할 수 있습니다");
+        }
+
+        if (payment.isPaid()) {
+            throw new Exception400("이미 처리된 결제입니다.");
+        }
+
+        if (!"PAID".equals(portOnePayment.getStatus())) {
+            throw new Exception400("결제가 완료되지 않았습니다.");
+        }
+
+        if (portOnePayment.getAmount() == null
+                || portOnePayment.getAmount().getTotal() == null
+                || portOnePayment.getAmount().getTotal() != payment.getAmount()) {
+            throw new Exception400("결제 금액이 일치하지 않습니다");
+        }
+
+        User user = payment.getUser();
+        user.chargePoint(payment.getAmount());
+        payment.markPaid(portOnePayment.getPgTxId());
+
+        return new PaymentResponse.CompleteDto(payment.getAmount(), user.getPoint());
+
+    }
 }
