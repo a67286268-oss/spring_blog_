@@ -63,11 +63,12 @@ public class BoardService {
         Board board = boardJpaRepository.findByIdJoinUser(id)
                         .orElseThrow(() -> new Exception404("게시글을 찾을 수 없습니다"));
         log.info("게시글 상세 조회 완료 - 제목 : {}, 작성자 : {} ", board.getTitle(), board.getUser().getUsername());
-
-        // 로그인 하지 않았으면 작성자도, 구매자도 아님
-
+        // 로그인하지 않아쓰면 작성자도, 구매자도 아님?
         boolean owner = sessionUserId != null && board.isOwner(sessionUserId);
-        boolean purchased = board.isOwner(sessionUserId) && purchaseJpaRepository.existsByUserIdAndBoardId(sessionUserId, id);
+        // 로그인 했고, 구매이력 테이블에 내가 존재한다 (boardId, userId)
+        boolean purchased = sessionUserId != null
+                && purchaseJpaRepository.existsByUserIdAndBoardId(sessionUserId, id);
+
 
         return new BoardResponse.DetailDto(board, owner, purchased);
     }
@@ -149,6 +150,7 @@ public class BoardService {
             log.warn("구매 내역이 있어 게시글 삭제 불가 - 게시글 ID : {}", id);
             throw new Exception400("구매한 사용자가 있는 게시글은 삭제할 수 없습니다.");
         }
+
         // boardId로 댓글 부터 먼저 삭제
         replyJpaRepository.deleteByBoardId(id);
         // 해당 게시글 삭제

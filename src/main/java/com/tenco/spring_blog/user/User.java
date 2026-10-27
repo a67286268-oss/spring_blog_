@@ -108,23 +108,21 @@ public class User {
         return "/images/" + this.profileImage;
     }
 
-    // 포인트 관력 편의 메서드 추가
+    // 포인트 관련 편의 메서드 추가
     public void chargePoint(int amount) {
         if (amount <= 0) {
-            throw new Exception400("충전할 포인트는 0보다 커야한다.");
+            throw new Exception400("충전할 포인트는 0보다 커야 합니다");
         }
         this.point += amount;
     }
 
     public void deductPoint(int amount) {
         if (amount <= 0) {
-            throw new Exception400("차감할 포인트는 0보다 커야한다.");
+            throw new Exception400("차감할 포인트는 0보다 커야 합니다");
         }
-
         if (this.point < amount) {
             throw new NotEnoughPointException("마이 페이지에서 충전 후 다시 시도해주세요");
         }
         this.point -= amount;
     }
-
 }

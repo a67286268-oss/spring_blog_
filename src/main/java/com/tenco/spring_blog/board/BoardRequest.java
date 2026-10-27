@@ -10,7 +10,7 @@ public class BoardRequest {
     public static class SaveDto {
         private String title;
         private String content;
-        private boolean premium; // 유료 게시글 여부 (체크 안하면 false)
+        private boolean premium; // 유료 게시글 여부 (체크 안 하면 false)
 
 
         // 검증 메서드 (선택 사항)

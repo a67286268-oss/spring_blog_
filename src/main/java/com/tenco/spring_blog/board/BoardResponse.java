@@ -8,8 +8,6 @@ import org.springframework.data.domain.Page;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.tenco.spring_blog.board.Board.PREMIUM_PRICE;
-
 /**
  * 게시글 응답 DTO
  *
@@ -104,16 +102,15 @@ public class BoardResponse {
         private String username;
         private String createdAt;
         private boolean premium; // 유료 게시글 여부
-        private int price; // 가격 안내 문구용
-        private boolean owner; // 로그인한 사용자가 작성자인가?
-        private boolean purchased; // 로그인한 사용자가 구매했는가?
+        private int price; //  가격 (안내 문구용)
+        private boolean owner; // 로그인한 사용자가 작성자인가
+        private boolean purchased; // 로그인한 사용자가 구매했는가
         private boolean canRead; // 본문 열람 가능 여부 = 무료글 OR 작성자 OR 구매자 --> OK
 
         public DetailDto(Board board, boolean owner, boolean purchased) {
             this.id = board.getId();
             this.title = board.getTitle();
             this.content = board.getContent();
-
             // 지연 로딩 오류 방지를 위한 방어적 코드 작성
             if (board.getUser() != null) {
                 this.userId = board.getUser().getId();
@@ -124,16 +121,13 @@ public class BoardResponse {
             }
 
             this.premium = board.isPremium();
-            this.price = PREMIUM_PRICE; // 추후수정
+            this.price = 500; // 추후 수정
             this.owner = owner;
             this.purchased = purchased;
-
             this.canRead = !premium || owner || purchased;
             if (!canRead) {
                 this.content = null;
             }
-
-
         }
     }
 

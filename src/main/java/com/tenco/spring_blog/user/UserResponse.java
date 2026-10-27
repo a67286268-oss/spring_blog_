@@ -24,7 +24,7 @@ public class UserResponse {
             this.email = user.getEmail();
             this.profileImage = user.getProfilePath(); // 코드 수정
             this.createdAt = MyDateUtil.timestampFormat(user.getCreatedAt());;
-            this.point = user.getPoint();
+            this.point = user.getPoint(); // 추가
         }
     }
 
