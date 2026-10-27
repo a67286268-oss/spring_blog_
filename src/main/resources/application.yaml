@@ -44,3 +44,8 @@ oauth:
     client-secret: ${KAKAO_CLIENT_SECRET}
     redirect-uri: ${REDIRECT_URI}
 
+portone:
+  store-id: ${PORTONE_STORE_ID:}
+  channel-key: ${PORTONE_CHANNEL_KEY:}
+  api-secret: ${PORTONE_API_SECRET:}
+

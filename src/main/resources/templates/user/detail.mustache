@@ -7,15 +7,15 @@
             <div class="text-center mb-4">
                 <!--   프로필 이미지 있을 경우              -->
                 {{#user.profileImage}}
-                <img src="{{user.profileImage}}" alt="" class="rounded-circle border"
-                     style="width: 200px; height: 200px; object-fit: cover">
+                    <img src="{{user.profileImage}}" alt="" class="rounded-circle border"
+                         style="width: 200px; height: 200px; object-fit: cover">
                 {{/user.profileImage}}
                 <!--   프로필 이미지 없을 경우              -->
                 {{^user.profileImage}}
-                <div class="rounded-circle border bg-secondary d-inline-flex align-items-center justify-content-center"
-                     style="width: 200px; height: 200px;" >
-                    <span class="text-white">프로필 사진 없음</span>
-                </div>
+                    <div class="rounded-circle border bg-secondary d-inline-flex align-items-center justify-content-center"
+                         style="width: 200px; height: 200px;" >
+                        <span class="text-white">프로필 사진 없음</span>
+                    </div>
                 {{/user.profileImage}}
             </div>
 
@@ -31,12 +31,22 @@
                 <label for="" class="form-label fw-bold">가입일</label>
                 <p class="form-control-plaintext">{{user.createdAt}}</p>
             </div>
+
+            {{! 보유 포인트 + 충전 (임시 추후 삭제) 결제와 연동}}
             <div class="mb-3">
+                <label for="" class="form-label fw-bold">보유 포인트</label>
+                <p class="form-control-plaintext">
+                    <span id="point-display">{{user.point}} <b>P</b></span>
+                </p>
+                <!--    임시 충전 삭제  -->
+            </div>
+
+            <div class="d-flex flex-column gap-2 mb-3">
+                <a href="/user/point/charge" class="btn btn-success">포인트충전(PG 결제)</a>
                 <a href="/user/update" class="btn btn-primary">회원 정보 수정</a>
                 <a href="/" class="btn btn-secondary">목록으로</a>
             </div>
         </div>
     </div>
 </div>
-
 {{> layout/footer}}

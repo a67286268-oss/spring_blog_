@@ -1,7 +1,9 @@
 package com.tenco.spring_blog.board;
 
+import com.tenco.spring_blog._core.error.Exception400;
 import com.tenco.spring_blog._core.error.Exception403;
 import com.tenco.spring_blog._core.error.Exception404;
+import com.tenco.spring_blog.purchase.PurchaseJpaRepository;
 import com.tenco.spring_blog.reply.ReplyJpaRepository;
 import com.tenco.spring_blog.user.SessionUserDto;
 import com.tenco.spring_blog.user.User;
@@ -32,6 +34,7 @@ public class BoardService {
     private final BoardJpaRepository boardJpaRepository;
     private final UserJpaRepository userJpaRepository;
     private final ReplyJpaRepository replyJpaRepository;
+    private final PurchaseJpaRepository purchaseJpaRepository;
 
     /**
      * 게시글 저장
@@ -55,12 +58,18 @@ public class BoardService {
      * @param id  게시글 PK
      * @return 게시글 정보 (작성자 정보 포함)
      */
-    public BoardResponse.DetailDto findById(Long id) {
+    public BoardResponse.DetailDto findById(Long id, Long sessionUserId) {
         log.info("게시글 상세 조회 서비스 - ID : {} ", id);
         Board board = boardJpaRepository.findByIdJoinUser(id)
                         .orElseThrow(() -> new Exception404("게시글을 찾을 수 없습니다"));
         log.info("게시글 상세 조회 완료 - 제목 : {}, 작성자 : {} ", board.getTitle(), board.getUser().getUsername());
-        return new BoardResponse.DetailDto(board);
+
+        // 로그인 하지 않았으면 작성자도, 구매자도 아님
+
+        boolean owner = sessionUserId != null && board.isOwner(sessionUserId);
+        boolean purchased = board.isOwner(sessionUserId) && purchaseJpaRepository.existsByUserIdAndBoardId(sessionUserId, id);
+
+        return new BoardResponse.DetailDto(board, owner, purchased);
     }
 
     /**
@@ -133,6 +142,12 @@ public class BoardService {
             log.warn("게시글 삭제 권한 없음 - 게시글 ID : {}, 작성자: {}, 요청자 : {}",
                     id, board.getUser().getUsername(), sessionUser.getUsername());
             throw new Exception403("본인이 작성한 게시글만 삭제할 수 있습니다");
+        }
+
+        // 구매자가 있는 게시글은 삭제 불가 (구매자의 구매 내역과 포인트 보호)
+        if (purchaseJpaRepository.countByBoardId(id) > 0) {
+            log.warn("구매 내역이 있어 게시글 삭제 불가 - 게시글 ID : {}", id);
+            throw new Exception400("구매한 사용자가 있는 게시글은 삭제할 수 없습니다.");
         }
         // boardId로 댓글 부터 먼저 삭제
         replyJpaRepository.deleteByBoardId(id);

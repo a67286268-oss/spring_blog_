@@ -5,6 +5,7 @@ import com.tenco.spring_blog._core.util.Define;
 import com.tenco.spring_blog.stos.PostDto;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpSession;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,6 +29,16 @@ public class UserController {
     private final UserService userService;
     private final KakaoLoginService kakaoLoginService;
 
+    // GET http://localhost:8080/user/point/charge (포인트 충전 화면)
+    @GetMapping("/user/point/charge")
+    public String chargePointForm(Model model, HttpSession session) {
+        SessionUserDto sessionUserDto = (SessionUserDto) session.getAttribute(Define.SESSION_USER);
+        model.addAttribute("user", sessionUserDto);
+        return "user/charge-point";
+    }
+
+
+
     @GetMapping("/kakao-login")
     public String kakaoLogin() {
         return "redirect:" + kakaoLoginService.getAuthorizeUrl();
@@ -37,9 +48,9 @@ public class UserController {
     @GetMapping("/oauth/kakao")
     public String kakaoCallback(@RequestParam(name = "code", required = false) String code,
                                 HttpSession session ) {
-         SessionUserDto sessionUserDto = kakaoLoginService.login(code);
-         session.setAttribute(Define.SESSION_USER, sessionUserDto);
-         return "redirect:/";
+        SessionUserDto sessionUserDto = kakaoLoginService.login(code);
+        session.setAttribute(Define.SESSION_USER, sessionUserDto);
+        return "redirect:/";
     }
 
     // 프로필 삭제

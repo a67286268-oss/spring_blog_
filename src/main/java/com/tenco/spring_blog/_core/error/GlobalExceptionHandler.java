@@ -156,4 +156,23 @@ public class GlobalExceptionHandler {
         }
     }
 
+    // 포인트 부족 : 경고창 후 마이페이지(충전 화면)로 이동
+    // 400 처리기는 이전 화면으로 돌아가지만, 포인트 부족은 충전하도록 안내하는 편이 자연스럽다
+    @ExceptionHandler(NotEnoughPointException.class)
+    @ResponseBody
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public String exNotEnoughPoint(NotEnoughPointException e, HttpServletRequest request) {
+        log.warn("==== 포인트 부족 ====");
+        log.warn("요청 URL : {}", request.getRequestURL());
+        log.warn("에러 메세지 : {}", e.getMessage());
+
+        String msg = e.getMessage().replace("'", "\\'"); // 따옴표 깨짐 방지
+        return """
+            <script>
+                alert('%s');
+                location.href = '/user/detail';
+            </script>
+            """.formatted(msg);
+    }
+
 }
