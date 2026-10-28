@@ -131,4 +131,10 @@ public class UserController {
         session.invalidate();
         return "redirect:/";
     }
+
+    // GET http://localhost:8080/user/purchase/list (구매 내역 화면)
+    @GetMapping("/user/purchase/list")
+    public String purchaseList() {
+        return "user/purchase-list";
+    }
 }
