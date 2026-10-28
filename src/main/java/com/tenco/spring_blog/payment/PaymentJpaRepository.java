@@ -1,9 +1,11 @@
 package com.tenco.spring_blog.payment;
 
+import com.tenco.spring_blog.purchase.Purchase;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface PaymentJpaRepository extends JpaRepository<Payment, Long> {
@@ -18,5 +20,15 @@ public interface PaymentJpaRepository extends JpaRepository<Payment, Long> {
         WHERE p.paymentId = :paymentId 
     """)
     boolean existsByPaymentId(@Param("paymentId") String paymentId);
+
+    // 결제 내역 조회 (로그인 사용자)
+    @Query("""
+                    SELECT p FROM Payment p 
+                    WHERE p.user.id = :userId
+                    AND p.status = :status
+                    ORDER BY p.id DESC 
+            """)
+    List<Payment> findAllByUserIdAndStatus(@Param("userId") Long userId,
+                                           @Param("status") PaymentStatus status);
 
 }

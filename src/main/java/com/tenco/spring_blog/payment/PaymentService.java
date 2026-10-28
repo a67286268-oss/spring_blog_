@@ -2,12 +2,15 @@ package com.tenco.spring_blog.payment;
 
 import com.tenco.spring_blog._core.error.Exception400;
 import com.tenco.spring_blog._core.error.Exception403;
+import com.tenco.spring_blog.purchase.Purchase;
+import com.tenco.spring_blog.purchase.PurchaseResponse;
 import com.tenco.spring_blog.user.User;
 import com.tenco.spring_blog.user.UserJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @RequiredArgsConstructor
@@ -78,5 +81,14 @@ public class PaymentService {
 
         return new PaymentResponse.CompleteDto(payment.getAmount(), user.getPoint());
 
+    }
+
+    public List<PaymentResponse.ListDto> findAllByUserId(Long userId) {
+        List<Payment> paymentList = paymentJpaRepository
+                .findAllByUserIdAndStatus(userId, PaymentStatus.PAID);
+        // 응답 DTO 설계 후 리턴
+        return paymentList.stream()
+                .map(PaymentResponse.ListDto::new)
+                .toList();
     }
 }

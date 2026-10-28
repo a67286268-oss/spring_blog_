@@ -66,12 +66,11 @@ public class PurchaseService {
      */
     public List<PurchaseResponse.ListDto> findAllByUserId(Long userId) {
         List<Purchase> purchaseList = purchaseJpaRepository.findAllByUserIdJoinBoard(userId);
-        // 2. 트랜젝션 안에서 엔티티를 응답DTO로 변환
+        // 2. 트랜젹션 안에서 엔티티를 응답 DTO로 변환 리턴 처리
         return purchaseList.stream()
                 .map(PurchaseResponse.ListDto::new)
                 .toList();
     }
-
 }
 
 

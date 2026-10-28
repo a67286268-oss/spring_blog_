@@ -2,6 +2,8 @@ package com.tenco.spring_blog.user;
 
 import com.tenco.spring_blog._core.error.UnAuthorizedException;
 import com.tenco.spring_blog._core.util.Define;
+import com.tenco.spring_blog.payment.PaymentResponse;
+import com.tenco.spring_blog.payment.PaymentService;
 import com.tenco.spring_blog.purchase.PurchaseResponse;
 import com.tenco.spring_blog.purchase.PurchaseService;
 import com.tenco.spring_blog.stos.PostDto;
@@ -33,6 +35,28 @@ public class UserController {
     private final UserService userService;
     private final KakaoLoginService kakaoLoginService;
     private final PurchaseService purchaseService;
+    private final PaymentService paymentService;
+
+    // GET http://localhost:8080/user/payment/list (결제 내역 화면)
+    @GetMapping("/user/payment/list")
+    public String paymentList(Model model, HttpSession session) {
+        SessionUserDto sessionUserDto = (SessionUserDto) session.getAttribute(Define.SESSION_USER);
+        List<PaymentResponse.ListDto> paymentList = paymentService.findAllByUserId(sessionUserDto.getId());
+        model.addAttribute("paymentList", paymentList);
+        return "user/payment-list";
+    }
+
+
+    // GET http://localhost:8080/user/purchase/list (구매 내역 화면)
+    @GetMapping("/user/purchase/list")
+    public String purchaseList(Model model, HttpSession session) {
+
+        SessionUserDto sessionUserDto = (SessionUserDto) session.getAttribute(Define.SESSION_USER);
+        List<PurchaseResponse.ListDto> purchaseList = purchaseService.findAllByUserId(sessionUserDto.getId());
+        model.addAttribute("purchaseList", purchaseList);
+        return "user/purchase-list";
+    }
+
 
     // GET http://localhost:8080/user/point/charge (포인트 충전 화면)
     @GetMapping("/user/point/charge")
@@ -135,20 +159,5 @@ public class UserController {
     public String logout(HttpSession session) {
         session.invalidate();
         return "redirect:/";
-    }
-
-    // GET http://localhost:8080/user/purchase/list (구매 내역 화면)
-    @GetMapping("/user/purchase/list")
-    public String purchaseList(Model model, HttpSession session) {
-        SessionUserDto sessionUserDto = (SessionUserDto) session.getAttribute(Define.SESSION_USER);
-        List<PurchaseResponse.ListDto> purchaseList = purchaseService.findAllByUserId(sessionUserDto.getId());
-        model.addAttribute("purchaseList", purchaseList);
-        return "user/purchase-list";
-    }
-
-    // GET http://localhost:8080/user/payment/list (결제 내역 화면)
-    @GetMapping("/user/payment/list")
-    public String paymentList() {
-        return "user/payment-list";
     }
 }
