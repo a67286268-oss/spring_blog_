@@ -23,10 +23,13 @@ public class PaymentService {
 
     public List<PaymentResponse.ListDto> findAllByUserId(Long userId) {
         List<Payment> paymentList = paymentJpaRepository
-                .findAllByUserIdAndStatus(userId, PaymentStatus.PAID);
+                .findAllByUserIdAndStatusList(userId, List.of(PaymentStatus.PAID, PaymentStatus.CANCELLED));
+
+        // 2. 결제 완료 상태면 환불 가능 (아니면 불가) 추후 연산해서 만들어서 내려 준다.
+        //  TODO - 임시값 설정 추후 수정
         // 응답 DTO 설계 후 리턴
         return paymentList.stream()
-                .map(PaymentResponse.ListDto::new)
+                .map(payment -> new PaymentResponse.ListDto(payment, payment.isPaid()))
                 .toList();
     }
 
