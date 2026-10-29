@@ -60,6 +60,7 @@ public class PurchaseService {
         purchaseJpaRepository.save(purchase);
     }
 
+
     /**
      * 구매 내역 조회
      * @param userId 로그인한 사용자 PK
@@ -71,6 +72,7 @@ public class PurchaseService {
                 .map(PurchaseResponse.ListDto::new)
                 .toList();
     }
+
 }
 
 

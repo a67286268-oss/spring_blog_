@@ -59,9 +59,9 @@
         try {
             // 1 단계 - 우리 서버에 결제 건 생성 요청 (paymentId, storeId, channelKey 받기)
             const prepareRes = await fetch("/api/payment/prepare",  {
-                method: "POST",
-                headers: {"Content-Type" : "application/json"},
-                body:  JSON.stringify({amount: selectedAmount})
+               method: "POST",
+               headers: {"Content-Type" : "application/json"},
+               body:  JSON.stringify({amount: selectedAmount})
             });
 
             const prepare = await prepareRes.json(); // JSON --> JS Object
@@ -107,7 +107,7 @@
         } catch (e) {
             alert(e.message +  " : 서버와 통신하지 못했습니다");
         } finally {
-            chargeBtn.disabled = false;
+           chargeBtn.disabled = false;
         }
 
     });
