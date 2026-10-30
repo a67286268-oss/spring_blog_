@@ -6,9 +6,12 @@ import com.tenco.spring_blog._core.error.Exception404;
 import com.tenco.spring_blog.payment.Payment;
 import com.tenco.spring_blog.payment.PaymentJpaRepository;
 import com.tenco.spring_blog.payment.PaymentResponse;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -49,5 +52,30 @@ public class RefundService {
         }
         return payment;
     }
+
+    /**
+     * 환불 요청 저장
+     */
+    @Transactional
+    public void save(Long userId, RefundRequest.SaveDto saveDto) {
+        // 1. 폼 요청 화면 처럼 검사를 한번 더 실행 (주소 직접 요청, 중복 제출 방지)
+        Payment payment = checkRefundable(saveDto.getPaymentPk(), userId);
+
+        // 2. 환불 요청 저장
+        Refund refund = Refund.builder()
+                .user(payment.getUser())
+                .payment(payment)
+                .reason(saveDto.getReason().trim())
+                .build();
+
+        refundRepository.save(refund);
+    }
+
+    public List<RefundResponse.ListDto> findAllByUserId(Long userId) {
+        List<Refund> refundList =  refundRepository.findAllByUserIdJoinPayment(userId);
+        return refundList.stream()
+                .map(RefundResponse.ListDto::new).toList();
+    }
+
 
 }
