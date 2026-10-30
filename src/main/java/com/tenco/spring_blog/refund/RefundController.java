@@ -7,7 +7,6 @@ import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.h2.engine.Mode;
-import org.springframework.http.HttpEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -32,11 +31,13 @@ public class RefundController {
         return "refund/request-form";
     }
 
+
+    // POST http://localhost:8080/refund/request
     @PostMapping("/refund/request")
-    public String request(RefundRequest.SaveDto saveDto, HttpSession session) {
+    public String request(RefundRequest.SaveDto saveDto, HttpSession session ) {
         saveDto.validate();
         SessionUserDto sessionUserDto = (SessionUserDto) session.getAttribute(Define.SESSION_USER);
-        refundService.save(sessionUserDto.getId(), saveDto);
+        refundService.save(saveDto, sessionUserDto.getId());
         return "redirect:/refund/list";
     }
 
@@ -44,7 +45,12 @@ public class RefundController {
     @GetMapping("/refund/list")
     public String list(Model model, HttpSession session) {
         SessionUserDto sessionUserDto = (SessionUserDto) session.getAttribute(Define.SESSION_USER);
-        model.addAttribute("refundList", refundService.findAllByUserId(sessionUserDto.getId()));
+        model.addAttribute("refundList",  refundService.findAllByUserId(sessionUserDto.getId()));
         return "refund/list";
     }
+
 }
+
+
+
+

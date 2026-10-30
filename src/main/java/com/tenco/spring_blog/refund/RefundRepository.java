@@ -1,6 +1,5 @@
 package com.tenco.spring_blog.refund;
 
-import com.tenco.spring_blog.payment.Payment;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

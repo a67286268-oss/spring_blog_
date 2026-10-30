@@ -25,34 +25,31 @@ public class PaymentService {
     private final UserJpaRepository userJpaRepository;
     private final RefundRepository refundRepository;
 
+
     public List<PaymentResponse.ListDto> findAllByUserId(Long userId) {
 
-        // 1. 화면에 보여줄 상태 목록 (READY는 제외)
+        // 1. 화면에 보여 줄 상태 목록 (READY 는 제외) - List<Payment> (로그인한 유저의 리스트)
         List<Payment> paymentList = paymentJpaRepository
                 .findAllByUserIdAndStatusList(userId, List.of(PaymentStatus.PAID, PaymentStatus.CANCELLED));
-        //환불 테이블에 내가 요청 PK정보만 리스트로 뽑아온다.
+        // 환불 테이블에 내가 요청 PK 정보만 리스트로 뽑아 온다. [3, 5]
         List<Long> requestedPaymentPkList = refundRepository.findPaymentPkListByUserId(userId);
 
+        // 위 결제 내용중에 완불 요청한 녀석은 p2, p3,
         List<PaymentResponse.ListDto> resultList = new ArrayList<>();
         for (Payment payment : paymentList) {
-            boolean refundable = false;
-
+             boolean refundable = false; // 기본값은 버튼 숨김
+            // Payment 테이블에  PAID 상태이고 , 아직 환불 요청한 적이 없을 때 (Refund payment_id 가 없어야 함)
             if (payment.isPaid()) {
-                boolean isRefundRequest = requestedPaymentPkList.contains(payment.getId());
-                if (isRefundRequest == false) {
-                    refundable = true;
-                }
+               boolean isRefundRequest = requestedPaymentPkList.contains(payment.getId());
+               if (isRefundRequest == false) {
+                   refundable = true;
+               }
             }
             resultList.add(new PaymentResponse.ListDto(payment, refundable));
         }
-
-
         // 응답 DTO 설계 후 리턴
         return resultList;
-
     }
-
-
 
     /**
      *  1단계 : 결제 건 생성
