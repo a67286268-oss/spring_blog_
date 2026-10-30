@@ -36,25 +36,20 @@
                                 {{/cancelled}}
                             </div>
 
-                            {{^cancelled}}
-                            <div class="text-end d-block">
-                                <span class="badge bg-primary fs-6">+{{amount}} P</span>
-                            </div>
-                            {{/cancelled}}
-
-                            {{#cancelled}}
-                                <div class="text-end d-block">
-                                    <span class="badge bg-secondary text-decoration-line-through fs-6">+{{amount}} P</span>
-                                </div>
-                            {{/cancelled}}
-
-                            <!--   환불 여부 버튼 추가 -->
-                            {{#refundable}}
-                            <div class="text-end ">
+                            <div class="text-end">
+                                {{^cancelled}}
+                                <span class="badge bg-primary fs-6 d-block mb-2">+{{amount}} P</span>
+                                {{/cancelled}}
+                                {{#cancelled}}
+                                <span class="badge bg-secondary text-decoration-line-through fs-6 d-block mb-2">+{{amount}} P</span>
+                                {{/cancelled}}
+                                <!--   환불 여부 버튼 추가 -->
+                                {{#refundable}}
                                 <!-- 환불 요청 폼 태그 이동 : 결제 PK 로 처리  -->
                                 <a href="/refund/request/{{id}}" class="btn btn-outline-danger btn-sm">환불 요청</a>
+                                {{/refundable}}
                             </div>
-                            {{/refundable}}
+
 
                         </div>
                     </div>

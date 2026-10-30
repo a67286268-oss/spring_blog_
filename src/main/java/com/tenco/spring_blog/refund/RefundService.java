@@ -9,6 +9,9 @@ import com.tenco.spring_blog.payment.PaymentResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -44,10 +47,33 @@ public class RefundService {
         }
 
         // 4. 이미 환불 요청한 결제인지 확인 (대기중 , 승인됨, 거절됨 모두 신청 불가)
-        if(refundRepository.findByPaymentPk(paymentPk).isPresent()) {
+        if (refundRepository.findByPaymentPk(paymentPk).isPresent()) {
             throw new Exception400("이미 환불 요청한 결제입니다");
         }
         return payment;
     }
 
+    /**
+     * 환불 요청 저장
+     */
+    @Transactional
+    public void save(RefundRequest.SaveDto saveDto, Long userId) {
+        // 1. 폼 요청 화면 처럼 검사를 한번 더 실행 (주소 직접 요청, 중복 제출 방지)
+        Payment payment = checkRefundable(saveDto.getPaymentPk(), userId);
+
+        // 2. 환불 요청 저장
+        Refund refund = Refund.builder()
+                .user(payment.getUser())
+                .payment(payment)
+                .reason(saveDto.getReason().trim())
+                .build();
+
+        refundRepository.save(refund);
+    }
+
+    public List<RefundResponse.ListDto> findAllByUserId(Long userId) {
+       List<Refund> refundList =  refundRepository.findAllByUserIdJoinPayment(userId);
+       return refundList.stream()
+               .map(RefundResponse.ListDto::new).toList();
+    }
 }

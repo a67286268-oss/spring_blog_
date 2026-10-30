@@ -11,6 +11,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -29,4 +30,27 @@ public class RefundController {
         model.addAttribute("payment", paymentListDto);
         return "refund/request-form";
     }
+
+
+    // POST http://localhost:8080/refund/request
+    @PostMapping("/refund/request")
+    public String request(RefundRequest.SaveDto saveDto, HttpSession session ) {
+        saveDto.validate();
+        SessionUserDto sessionUserDto = (SessionUserDto) session.getAttribute(Define.SESSION_USER);
+        refundService.save(saveDto, sessionUserDto.getId());
+        return "redirect:/refund/list";
+    }
+
+    // POST http://localhost:8080/refund/list
+    @GetMapping("/refund/list")
+    public String list(Model model, HttpSession session) {
+        SessionUserDto sessionUserDto = (SessionUserDto) session.getAttribute(Define.SESSION_USER);
+        model.addAttribute("refundList",  refundService.findAllByUserId(sessionUserDto.getId()));
+        return "refund/list";
+    }
+
 }
+
+
+
+

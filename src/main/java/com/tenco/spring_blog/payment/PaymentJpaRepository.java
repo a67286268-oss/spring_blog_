@@ -32,4 +32,5 @@ public interface PaymentJpaRepository extends JpaRepository<Payment, Long> {
                                            @Param("statusList") List<PaymentStatus> statusList );
 
 
+
 }

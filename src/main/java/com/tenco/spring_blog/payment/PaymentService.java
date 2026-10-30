@@ -2,6 +2,8 @@ package com.tenco.spring_blog.payment;
 
 import com.tenco.spring_blog._core.error.Exception400;
 import com.tenco.spring_blog._core.error.Exception403;
+import com.tenco.spring_blog.refund.RefundRepository;
+import com.tenco.spring_blog.refund.RefundResponse;
 import com.tenco.spring_blog.user.User;
 import com.tenco.spring_blog.user.UserJpaRepository;
 import lombok.RequiredArgsConstructor;
@@ -9,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -20,17 +23,32 @@ public class PaymentService {
 
     private final PaymentJpaRepository paymentJpaRepository;
     private final UserJpaRepository userJpaRepository;
+    private final RefundRepository refundRepository;
+
 
     public List<PaymentResponse.ListDto> findAllByUserId(Long userId) {
+
+        // 1. 화면에 보여 줄 상태 목록 (READY 는 제외) - List<Payment> (로그인한 유저의 리스트)
         List<Payment> paymentList = paymentJpaRepository
                 .findAllByUserIdAndStatusList(userId, List.of(PaymentStatus.PAID, PaymentStatus.CANCELLED));
+        // 환불 테이블에 내가 요청 PK 정보만 리스트로 뽑아 온다. [3, 5]
+        List<Long> requestedPaymentPkList = refundRepository.findPaymentPkListByUserId(userId);
 
-        // 2. 결제 완료 상태면 환불 가능 (아니면 불가) 추후 연산해서 만들어서 내려 준다.
-        //  TODO - 임시값 설정 추후 수정
+        // 위 결제 내용중에 완불 요청한 녀석은 p2, p3,
+        List<PaymentResponse.ListDto> resultList = new ArrayList<>();
+        for (Payment payment : paymentList) {
+             boolean refundable = false; // 기본값은 버튼 숨김
+            // Payment 테이블에  PAID 상태이고 , 아직 환불 요청한 적이 없을 때 (Refund payment_id 가 없어야 함)
+            if (payment.isPaid()) {
+               boolean isRefundRequest = requestedPaymentPkList.contains(payment.getId());
+               if (isRefundRequest == false) {
+                   refundable = true;
+               }
+            }
+            resultList.add(new PaymentResponse.ListDto(payment, refundable));
+        }
         // 응답 DTO 설계 후 리턴
-        return paymentList.stream()
-                .map(payment -> new PaymentResponse.ListDto(payment, payment.isPaid()))
-                .toList();
+        return resultList;
     }
 
     /**

@@ -1,6 +1,5 @@
 package com.tenco.spring_blog.refund;
 
-import com.tenco.spring_blog.payment.Payment;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -8,7 +7,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Optional;
 
-public interface RefundRepository extends JpaRepository<Payment, Long> {
+public interface RefundRepository extends JpaRepository<Refund, Long> {
 
     // 결제 (payment.id) 로 조회 기능 추가
     @Query("SELECT r FROM Refund r WHERE r.payment.id = :paymentPk")
