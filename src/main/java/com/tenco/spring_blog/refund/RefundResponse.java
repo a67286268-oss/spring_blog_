@@ -39,4 +39,43 @@ public class RefundResponse {
              this.rejected = refund.getStatus() == RefundStatus.REJECTED;
          }
      }
+
+    public static class AdminListDto {
+         private Long id; //PK값
+         private String username; // 환불자 이름
+         private String paymentId; // 포트원 결제건 식별자
+         private int amount; // 환불 금액
+         private String reason; // 환불 사유
+         private String statusDisplay; // 대기중, 승인됨, 거절됨
+         private String requestedAt; // 환불 신청일
+
+        private boolean pending; // 대기중
+        private boolean approved; // 승인됨
+
+        public AdminListDto(Refund refund) {
+            this.id = refund.getId();
+            this.username = refund.getUser().getUsername();
+            this.paymentId = refund.getPayment().getPaymentId();
+            this.amount = refund.getPayment().getAmount();
+            this.reason = refund.getReason();
+            this.statusDisplay = refund.getStatus().getDisplayName();
+            if (refund.getCreatedAt() != null) {
+                this.requestedAt = MyDateUtil.timestampFormat(refund.getCreatedAt());
+            }
+
+            this.pending = refund.getStatus() == RefundStatus.PENDING;
+            this.approved = refund.getStatus() == RefundStatus.APPROVED;
+        }
+    }
+
+    @Data
+    public static class ApproveDto {
+        private String paymentId; // 포트원 결제 건 식벌자 (경로로 활용 됨)
+        private int amount; // DB 조회해야 알 수 있음
+
+        public ApproveDto(String paymentId, int amount) {
+            this.paymentId = paymentId;
+            this.amount = amount;
+        }
+    }
 }

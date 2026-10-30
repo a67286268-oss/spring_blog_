@@ -10,6 +10,20 @@ import lombok.Data;
 public class PaymentResponse {
 
     @Data
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class PortOneCancel {
+        Cancellation cancellation;
+
+        @Data
+        @JsonIgnoreProperties(ignoreUnknown = true)
+        public static class Cancellation {
+            private String id;
+            private String status;
+            private int totalAmount;
+        }
+    }
+
+    @Data
     public static class ListDto {
         private Long id;   // 결제 내역 PK
         private String paymentId;
@@ -75,5 +89,7 @@ public class PaymentResponse {
             private Integer total;
         }
     }
+
+
 
 }
