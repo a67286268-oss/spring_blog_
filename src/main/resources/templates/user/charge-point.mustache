@@ -4,12 +4,6 @@
     <div class="card">
         <div class="card-header"><h4 class="mb-0"><b>포인트 충전</b></h4></div>
         <div class="card-body">
-            <label class="form-label fw-bold">현재 보유 포인트</label>
-            <div class="mb-4">
-                <span class="badge bg-primary fs-5"> P</span>
-            </div>
-            <hr>
-
             <div class="mb-4">
                 <label class="form-label fw-bold mb-3">충전할 포인트 선택</label>
                 <!--  이벤트 위임 방식으로 수정 -->
@@ -65,14 +59,14 @@
         try {
             // 1 단계 - 우리 서버에 결제 건 생성 요청 (paymentId, storeId, channelKey 받기)
             const prepareRes = await fetch("/api/payment/prepare",  {
-                method: "POST",
-                headers: {"Content-Type" : "application/json"},
-                body:  JSON.stringify({amount: selectedAmount})
+               method: "POST",
+               headers: {"Content-Type" : "application/json"},
+               body:  JSON.stringify({amount: selectedAmount})
             });
 
             const prepare = await prepareRes.json(); // JSON --> JS Object
             if (!prepareRes.ok) {
-                alert("잘못된 요청입니다");
+                throw new Error(prepare.message);
             }
 
             // 2단계 포트원 결제창 호출 (카카오페이 = 간편 결제)
@@ -90,6 +84,7 @@
             // 결제 실패나 취소 시 응답에 code가 들어 있음
             if (!paymentRes || paymentRes.code !== undefined) {
                 alert("결제가 완료되지 않았습니다");
+                return;
             }
 
             // 3 단계 서버 검증 요청 (우리서버에서 포트원 서보로 직접 HTTP 통신 후 정상적인 부분 확인 후 포인 충전)
@@ -101,17 +96,19 @@
 
             const result = await completeRes.json();
             if (!completeRes.ok) {
-                alert("포인트 충전에 실패했습니다");
+                throw new Error(result.message);
             }
 
-            alert("충전이 완료되었습니다")
+            alert("충전이 완료되었습니다\n충전금액:"
+                    +result.amount.toLocaleString()
+                    +"\n현재보유포인트 : " + result.currentPoint);
 
             location.href = "/user/detail";
 
         } catch (e) {
-            alert(e.message + "서버와 통신하지 못 했습니다.");
+            alert("서버와 통신하지 못했습니다");
         } finally {
-            chargeBtn.disabled = false;
+           chargeBtn.disabled = false;
         }
 
     });

@@ -2,14 +2,20 @@ package com.tenco.spring_blog.payment;
 
 import com.tenco.spring_blog._core.error.Exception400;
 import com.tenco.spring_blog._core.error.Exception403;
+import com.tenco.spring_blog.refund.RefundRepository;
+import com.tenco.spring_blog.refund.RefundResponse;
 import com.tenco.spring_blog.user.User;
 import com.tenco.spring_blog.user.UserJpaRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 @Transactional(readOnly = true)
@@ -17,6 +23,33 @@ public class PaymentService {
 
     private final PaymentJpaRepository paymentJpaRepository;
     private final UserJpaRepository userJpaRepository;
+    private final RefundRepository refundRepository;
+
+
+    public List<PaymentResponse.ListDto> findAllByUserId(Long userId) {
+
+        // 1. 화면에 보여 줄 상태 목록 (READY 는 제외) - List<Payment> (로그인한 유저의 리스트)
+        List<Payment> paymentList = paymentJpaRepository
+                .findAllByUserIdAndStatusList(userId, List.of(PaymentStatus.PAID, PaymentStatus.CANCELLED));
+        // 환불 테이블에 내가 요청 PK 정보만 리스트로 뽑아 온다. [3, 5]
+        List<Long> requestedPaymentPkList = refundRepository.findPaymentPkListByUserId(userId);
+
+        // 위 결제 내용중에 완불 요청한 녀석은 p2, p3,
+        List<PaymentResponse.ListDto> resultList = new ArrayList<>();
+        for (Payment payment : paymentList) {
+             boolean refundable = false; // 기본값은 버튼 숨김
+            // Payment 테이블에  PAID 상태이고 , 아직 환불 요청한 적이 없을 때 (Refund payment_id 가 없어야 함)
+            if (payment.isPaid()) {
+               boolean isRefundRequest = requestedPaymentPkList.contains(payment.getId());
+               if (isRefundRequest == false) {
+                   refundable = true;
+               }
+            }
+            resultList.add(new PaymentResponse.ListDto(payment, refundable));
+        }
+        // 응답 DTO 설계 후 리턴
+        return resultList;
+    }
 
     /**
      *  1단계 : 결제 건 생성
@@ -48,35 +81,61 @@ public class PaymentService {
         return paymentId;
     }
 
+    /**
+     * 3단계 : 결제 검증 + 포인트 충전
+     * 포트원에서 조회한 결과를 1단계 기록 payment_tb 정보랑 비교 한다.
+     * 하나라도 맞지 않으면 예외 --> 트랜잭션 롤백(포인트 지급 안 됨)
+     */
     @Transactional
     public PaymentResponse.CompleteDto complete(Long sessionUserId, String paymentId, PaymentResponse.PortOnePayment portOnePayment) {
-
+        // 1. 우리 서버가 발급한 결제 건인지 확인
         Payment payment = paymentJpaRepository.findByPaymentId(paymentId)
-                .orElseThrow(() -> new Exception400("결제 정보를 찾을수 없습니다"));
+                .orElseThrow(() -> new Exception400("결제 정보를 찾을 수 없습니다"));
 
+        // 2. 결제를 시작한 본인인지 확인
         if (!payment.isOwner(sessionUserId)) {
             throw new Exception403("본인의 결제만 처리할 수 있습니다");
         }
 
+        // 3. 중복 지급 방지 : 이미 PAID 이면 거부
         if (payment.isPaid()) {
-            throw new Exception400("이미 처리된 결제입니다.");
+            throw new Exception400("이미 처리된 결제입니다");
         }
 
+        // 4. 포트원 기준 결제 상태 확인
         if (!"PAID".equals(portOnePayment.getStatus())) {
-            throw new Exception400("결제가 완료되지 않았습니다.");
+            throw new Exception400("결제가 완료 되지 않았습니다 : " + portOnePayment.getStatus());
         }
 
+        // 5. 금액 위변조 확인 : 실제 결제 금액 == 1단계에서 기록한 금액이 같아야 한다.
         if (portOnePayment.getAmount() == null
                 || portOnePayment.getAmount().getTotal() == null
                 || portOnePayment.getAmount().getTotal() != payment.getAmount()) {
-            throw new Exception400("결제 금액이 일치하지 않습니다");
+            throw  new Exception400("결제 금액이 일치하지 않습니다");
         }
 
+        // 6. 검증 통과 : 포인트 충전 + 결제 완료 표시 (더티 체킹)
         User user = payment.getUser();
-        user.chargePoint(payment.getAmount());
+        user.chargePoint(payment.getAmount()); // 해당 유저의 포인트 충전 됨
         payment.markPaid(portOnePayment.getPgTxId());
 
-        return new PaymentResponse.CompleteDto(payment.getAmount(), user.getPoint());
+        log.info("결제 완료 및 포인트 충전 - 사용자 ID : {}, paymentId : {}, 금액 : {}",
+                sessionUserId, paymentId, payment.getAmount());
 
+        return new PaymentResponse.CompleteDto(payment.getAmount(), user.getPoint());
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+

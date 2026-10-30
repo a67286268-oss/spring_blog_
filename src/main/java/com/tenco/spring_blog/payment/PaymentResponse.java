@@ -1,11 +1,54 @@
 package com.tenco.spring_blog.payment;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.tenco.spring_blog._core.util.MyDateUtil;
+import jdk.jfr.DataAmount;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 
 public class PaymentResponse {
+
+    @Data
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class PortOneCancel {
+        Cancellation cancellation;
+
+        @Data
+        @JsonIgnoreProperties(ignoreUnknown = true)
+        public static class Cancellation {
+            private String id;
+            private String status;
+            private int totalAmount;
+        }
+    }
+
+    @Data
+    public static class ListDto {
+        private Long id;   // 결제 내역 PK
+        private String paymentId;
+        private String pgTxId;
+        private int amount;
+        private String statusDisplay; // 상태 표시 이름 (결제 완료 ..)
+        private String paidAt;        // 결제 시간
+        private boolean cancelled;  // 추가 : 환불 완료 결제인지 확인 (배지 색 구분용)
+        private boolean refundable;  // 추가 : 환불 요청 버튼 표시 여부
+
+        // (환불 테이블 만들어야 함)
+        // 환불 가능 여부는 환불 요청 기록이 있어야 알 수 있으므로 서브에스에서 계산해서 넘겨 준다
+        @Builder
+        public ListDto(Payment payment, boolean refundable) {
+            this.id = payment.getId();
+            this.paymentId = payment.getPaymentId();
+            this.pgTxId = payment.getPgTxId();
+            this.amount = payment.getAmount();
+            this.statusDisplay = payment.getStatus().getDisplayName(); // 결제완료, 결제 대기, 결제 취소
+            this.paidAt = MyDateUtil.timestampFormat(payment.getCreatedAt());
+            this.cancelled = payment.getStatus() == PaymentStatus.CANCELLED; // true, false
+            this.refundable = refundable;
+        }
+    }
+
 
     // 1단계 응답 : 브라우저가 결제창 띄울 때 사용
     @Data
@@ -32,11 +75,12 @@ public class PaymentResponse {
         private int currentPoint; // 충전 후 보유 포인트
     }
 
+    // 포트원 V2 결제 단건 조회 응답 (필요한 필드만 사용)
     @Data
     public static class PortOnePayment {
         private String id; // paymentId
-        private String status; // READY , PAID , FAILED , CANCELLED 등 날아옴
-        private String pgTxId; // pg사 거래번호
+        private String status; // READY, PAID, FAILED, CANCELLED 등 날라옴
+        private String pgTxId; // PG사 거래 번호
         private Amount amount;
 
         @Data
@@ -45,4 +89,7 @@ public class PaymentResponse {
             private Integer total;
         }
     }
+
+
+
 }

@@ -15,7 +15,7 @@ import java.sql.Timestamp;
 @NoArgsConstructor
 @Entity
 @Table(name = "purchase_tb",
-    uniqueConstraints = {@UniqueConstraint(name = "uk_user_board", columnNames = {"user_id", "board_id"})})
+        uniqueConstraints = {@UniqueConstraint(name = "uk_user_board", columnNames = {"user_id", "board_id"})})
 public class Purchase {
 
     @Id
